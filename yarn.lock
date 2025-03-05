@@ -1094,19 +1094,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"portfolio@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "portfolio@workspace:."
-  dependencies:
-    "@types/three": "npm:^0.174.0"
-    lil-gui: "npm:^0.20.0"
-    three: "npm:^0.174.0"
-    three-stdlib: "npm:^2.35.14"
-    typescript: "npm:^5.8.2"
-    vite: "npm:^6.2.0"
-  languageName: unknown
-  linkType: soft
-
 "postcss@npm:^8.5.3":
   version: 8.5.3
   resolution: "postcss@npm:8.5.3"
@@ -1375,6 +1362,19 @@ __metadata:
   checksum: 10c0/d4679609bb2a9b48eeaf84632b6d844128d2412b95b6de07d53d8ee8baf4ca0857c9331dfa510390a0727b550fd543d4d1a10995ad86cdf078423fbb8d99831d
   languageName: node
   linkType: hard
+
+"three-playground@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "three-playground@workspace:."
+  dependencies:
+    "@types/three": "npm:^0.174.0"
+    lil-gui: "npm:^0.20.0"
+    three: "npm:^0.174.0"
+    three-stdlib: "npm:^2.35.14"
+    typescript: "npm:^5.8.2"
+    vite: "npm:^6.2.0"
+  languageName: unknown
+  linkType: soft
 
 "three-stdlib@npm:^2.35.14":
   version: 2.35.14

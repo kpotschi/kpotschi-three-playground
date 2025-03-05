@@ -1,31 +1,75 @@
 import { GUI } from 'lil-gui';
-import { RoundedBoxGeometry } from 'three-stdlib';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import Ground from './entities/Ground';
+import TextureManager from './managers/TextureManager';
+import CustomLoader from './managers/CustomLoader';
+import Ball from './entities/Ball';
+import Cube from './entities/Cube';
+import Tree from './entities/Tree';
 
 export default class App {
 	public scene: THREE.Scene;
 	public renderer: THREE.WebGLRenderer;
 	public camera: THREE.OrthographicCamera;
 	public gui: GUI;
+	public textureManager: TextureManager;
 	readonly frustumSize = 20;
+	private loader: CustomLoader;
+	private ground: Ground;
+	private cube: Cube;
+	private ball: Ball;
+	private tree: Tree;
+	public envMap: THREE.DataTexture;
 
 	constructor() {
-		console.log('App is running');
+		this.loader = new CustomLoader(this);
+		this.textureManager = new TextureManager(this.loader);
 		this.scene = new THREE.Scene();
 		this.gui = new GUI();
 		this.createRenderer();
 		this.createCamera();
-
-		this.animate();
-
-		this.createLandscape();
+		this.createLighting();
+		this.loader.preload();
 		new OrbitControls(this.camera, this.renderer.domElement);
 	}
 
+	public create() {
+		this.createLandscape();
+		this.animate();
+	}
+
 	private animate() {
+		this.cube.rotateY(0.01);
+		// this.ball.position.z = Math.sin(Date.now() * 0.001) * 2;
 		requestAnimationFrame(this.animate.bind(this));
 		this.renderer.render(this.scene, this.camera);
+	}
+
+	private createLighting() {
+		const folder = this.gui.addFolder('Lighting');
+
+		// ambientLight
+		const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+		const ambientLightFolder = folder.addFolder('Ambient Light');
+		ambientLightFolder.add(ambientLight, 'intensity', 0, 1);
+		ambientLightFolder.addColor(ambientLight, 'color');
+		this.scene.add(ambientLight);
+
+		// pointLight
+		const pointLightFolder = folder.addFolder('Point Light');
+		const pointLight = new THREE.PointLight(0xffffff, 140);
+		pointLight.position.set(4, 16, 0);
+		pointLight.lookAt(0, 0, 0);
+
+		pointLightFolder.add(pointLight.position, 'x', 0, 100);
+		pointLightFolder.add(pointLight.position, 'y', 0, 100);
+		pointLightFolder.add(pointLight, 'intensity', 0, 200);
+		pointLightFolder.addColor(pointLight, 'color');
+
+		const helper = new THREE.PointLightHelper(pointLight);
+		this.scene.add(helper);
+		this.scene.add(pointLight);
 	}
 
 	private createRenderer() {
@@ -33,6 +77,11 @@ export default class App {
 		this.renderer.setSize(window.innerWidth, window.innerHeight);
 		document.getElementById('app')?.appendChild(this.renderer.domElement);
 		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+		this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+		this.renderer.toneMappingExposure = 1;
+		this.renderer.shadowMap.enabled = true; // Enable shadow maps
+		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optional: for softer shadows
 
 		window.addEventListener('resize', () => {
 			this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -49,14 +98,15 @@ export default class App {
 	private createCamera() {
 		const aspectRatio = window.innerWidth / window.innerHeight;
 
-		this.camera = new THREE.OrthographicCamera(
-			(this.frustumSize * aspectRatio) / -2, // left
-			(this.frustumSize * aspectRatio) / 2, // right
-			this.frustumSize / 2, // top
-			this.frustumSize / -2, // bottom
-			0.1, // near
-			1000 // far
-		);
+		// this.camera = new THREE.OrthographicCamera(
+		// 	(this.frustumSize * aspectRatio) / -2, // left
+		// 	(this.frustumSize * aspectRatio) / 2, // right
+		// 	this.frustumSize / 2, // top
+		// 	this.frustumSize / -2, // bottom
+		// 	0.1, // near
+		// 	1000 // far
+		// );
+		this.camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
 
 		this.camera.position.set(50, 50, 50);
 		// this.camera.position.set(0, 10, 0);
@@ -67,69 +117,16 @@ export default class App {
 	}
 
 	private createLandscape() {
-		const groundWidth = 2;
-		const groundGeometry = new RoundedBoxGeometry(10, 10, 2, 10, 0.5);
-		const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x009900 });
-		const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-		ground.rotateX(-Math.PI / 2);
-		ground.position.set(0, -groundWidth / 2, 0);
-		this.scene.add(ground);
+		const folder = this.gui.addFolder('Landscape');
 
-		const size = 2;
-		const cubeGeometry = new THREE.BoxGeometry(size, size, size);
-		const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x000099 });
-		const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-		cube.position.set(-2, size / 2, 0);
+		this.ground = new Ground(this, folder);
 
-		this.scene.add(cube);
+		this.cube = new Cube(this, folder);
 
-		const sphereRadius = 1;
-		const sphereGeometry = new THREE.SphereGeometry(sphereRadius, 32, 32);
-		const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-		const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-		sphere.position.set(2, sphereRadius, 0);
-		this.scene.add(sphere);
+		this.ball = new Ball(this);
 
-		// const planeGeometry = new THREE.PlaneGeometry(10, 10);
-		// const planeMaterial = new THREE.MeshBasicMaterial({
-		// 	color: 0x0000ff,
-		// 	side: THREE.DoubleSide,
-		// });
-		// const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-		// plane.rotation.x = Math.PI / 2;
-		// this.scene.add(plane);
+		this.tree = new Tree(this);
 	}
 }
 
 new App();
-// Create a scene
-// const scene = new THREE.Scene();
-
-// // Create a camera
-// const camera = new THREE.PerspectiveCamera(
-// 	75,
-// 	window.innerWidth / window.innerHeight,
-// 	0.1,
-// 	1000
-// );
-// camera.position.z = 5;
-
-// // Create a renderer
-// const renderer = new THREE.WebGLRenderer();
-// renderer.setSize(window.innerWidth, window.innerHeight);
-// document.getElementById('app')?.appendChild(renderer.domElement);
-
-// // Create a cube
-// const geometry = new THREE.BoxGeometry();
-// const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-// const cube = new THREE.Mesh(geometry, material);
-// scene.add(cube);
-
-// // Animation loop
-// function animate() {
-// 	requestAnimationFrame(animate);
-// 	cube.rotation.x += 0.01;
-// 	cube.rotation.y += 0.01;
-// 	renderer.render(scene, camera);
-// }
-// animate();
