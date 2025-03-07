@@ -6,23 +6,25 @@ export default class Cube extends THREE.Mesh {
 	readonly size: number = 2;
 	declare material: THREE.MeshStandardMaterial;
 
-	constructor(readonly app: App, readonly gui: GUI) {
+	constructor(readonly app: App) {
 		super();
 
 		this.geometry = new THREE.BoxGeometry(this.size, this.size, this.size);
 		this.material = new THREE.MeshStandardMaterial({
-			color: 0xffffff,
-			metalness: 0.5,
-			roughness: 0.1,
-			envMap: this.app.envMap, // Apply the environment map
+			color: 0xff0000,
+			metalness: 0.18,
+			roughness: 0.14,
+			// envMap: this.app.envMap, // Apply the environment map
 		});
-		this.position.set(-2, this.size / 2, 0);
+		this.position.set(-2, this.size / 2, -2);
 		this.app.scene.add(this);
-		this.addDebug();
+		this.castShadow = true;
+
+		if (this.app.debug) this.addDebug(this.app.debug);
 	}
 
-	private addDebug() {
-		const folder = this.gui.addFolder('Cube');
+	private addDebug(debugFolder: GUI) {
+		const folder = debugFolder.addFolder('Cube');
 		folder.addColor(this.material, 'color');
 		folder.add(this.material, 'metalness', 0, 1);
 		folder.add(this.material, 'roughness', 0, 1);

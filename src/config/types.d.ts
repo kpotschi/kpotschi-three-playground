@@ -6,7 +6,7 @@ export type TextureType =
 	| 'roughness'
 	| 'ao'
 	| 'displacement'
-	| 'envmap'
+	| 'metalness'
 	| 'matcap';
 
 export interface TextureSet {
@@ -14,7 +14,12 @@ export interface TextureSet {
 	normal?: THREE.Texture;
 	roughness?: THREE.Texture;
 	ao?: THREE.Texture;
+	metalness?: THREE.Texture;
 	displacement?: THREE.Texture;
-	envmap?: THREE.Texture;
 	matcap?: THREE.Texture;
 }
+
+export type LoaderObject = {
+	name: string;
+	path: string;
+};
